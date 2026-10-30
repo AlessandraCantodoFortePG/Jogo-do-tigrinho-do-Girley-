@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Giro da Sorte</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:20px;background:linear-gradient(145deg,#f9a51a,#9c2805);color:#fff7df;font-family:Arial,sans-serif;display:grid;place-items:center}
+main{width:min(100%,520px);padding:24px;border:2px solid #ffd76d;border-radius:22px;background:#542006eF;box-shadow:0 18px 55px #40130099}
+h1{text-align:center;color:#ffe18b;margin:0 0 6px}
+.note{text-align:center;font-size:12px;color:#ffe8bd}
+.stats{display:flex;justify-content:space-between;gap:8px;margin:20px 0}
+.stat{flex:1;padding:12px 8px;border:1px solid #ffc84c66;border-radius:12px;text-align:center;background:#2c100866}
+.stat small{display:block;font-size:10px;color:#ffd990}
+.stat strong{display:block;margin-top:6px;font-size:20px}
+.machine{padding:16px;border:2px solid #ffd15a;border-radius:17px;background:linear-gradient(#bd570e,#762506)}
+.reels{display:flex;justify-content:center;gap:10px;padding:12px;border-radius:12px;background:#fff2d1}
+.reel{width:100px;height:100px;display:grid;place-items:center;border-radius:10px;background:white;color:#4b2008;font-size:54px;box-shadow:inset 0 0 8px #7d480055}
+#message{min-height:24px;text-align:center;font-weight:bold;margin:12px 0 0}
+.bet{text-align:center;margin:18px 0 10px;color:#ffe28b}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+button{padding:13px 8px;border:1px solid #ffdf83;border-radius:10px;background:#9b3909;color:white;font-weight:bold;font-size:15px;cursor:pointer}
+button:hover{filter:brightness(1.15)}
+button:disabled{opacity:.45;cursor:not-allowed}
+#spin{grid-column:1/-1;background:linear-gradient(#ffe783,#efa71a);color:#4b1c00;font-size:18px}
+.extra{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+.extra button{flex:1;font-size:12px;background:#542006}
+footer{text-align:center;margin-top:18px;font-size:11px;color:#ffe8bd}
+@media(max-width:380px){main{padding:16px}.reel{width:82px;height:82px;font-size:46px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>🐯 Giro da Sorte 🐯</h1>
+  <div class="note">Jogo de demonstração — sem dinheiro real</div>
+
+  <section class="stats">
+    <div class="stat"><small>FICHAS</small><strong id="balance">500</strong></div>
+    <div class="stat"><small>APOSTA</small><strong id="bet">0</strong></div>
+    <div class="stat"><small>RODADAS</small><strong id="rounds">0</strong></div>
+  </section>
+
+  <section class="machine">
+    <div class="reels">
+      <div class="reel" id="r1">7️⃣</div>
+      <div class="reel" id="r2">❤️</div>
+      <div class="reel" id="r3">🍒</div>
+    </div>
+    <p id="message">Escolha sua aposta e gire!</p>
+  </section>
+
+  <p class="bet">Aposta: <strong id="betLabel">0</strong> fichas</p>
+
+  <section class="controls">
+    <button id="minus">− 10</button>
+    <button id="plus">+ 10</button>
+    <button id="max">APOSTA MÁXIMA</button>
+    <button id="spin">↻ GIRAR</button>
+  </section>
+
+  <div class="extra">
+    <button id="add">＋ 500 fichas fictícias</button>
+    <button id="reset">Reiniciar</button>
+  </div>
+
+  <footer>As fichas são virtuais. Não há depósitos, saques ou prêmios reais.</footer>
+</main>
+
+<script>
+const symbols=[
+  {icon:"7️⃣",name:"Sete",mult:17},
+  {icon:"❤️",name:"Coração",mult:13},
+  {icon:"🍒",name:"Cereja",mult:10},
+  {icon:"💎",name:"Diamante",mult:8},
+  {icon:"♠️",name:"Espadilha",mult:6}
+];
+let state;
+try{
+  state=JSON.parse(localStorage.getItem("giro-sorte"))||{balance:500,bet:0,rounds:0};
+}catch(e){
+  state={balance:500,bet:0,rounds:0};
+}
+const $=id=>document.getElementById(id);
+function save(){
+  $("balance").textContent=state.balance;
+  $("bet").textContent=state.bet;
+  $("betLabel").textContent=state.bet;
+  $("rounds").textContent=state.rounds;
+  $("plus").disabled=state.balance<10;
+  $("minus").disabled=state.bet<10;
+  $("max").disabled=state.balance<1;
+  $("spin").disabled=state.bet<10;
+  try{localStorage.setItem("giro-sorte",JSON.stringify(state))}catch(e){}
+}
+$("plus").onclick=()=>{
+  if(state.balance>=10){state.balance-=10;state.bet+=10;$("message").textContent="Aposta atualizada."}
+  save();
+};
+$("minus").onclick=()=>{
+  if(state.bet>=10){state.bet-=10;state.balance+=10;$("message").textContent="10 fichas devolvidas."}
+  save();
+};
+$("max").onclick=()=>{
+  state.bet+=state.balance;state.balance=0;
+  $("message").textContent="Aposta máxima selecionada.";save();
+};
+$("add").onclick=()=>{
+  state.balance+=500;
+  $("message").textContent="500 fichas fictícias adicionadas.";save();
+};
+$("reset").onclick=()=>{
+  state={balance:500,bet:0,rounds:0};
+  $("r1").textContent="7️⃣";$("r2").textContent="❤️";$("r3").textContent="🍒";
+  $("message").textContent="Jogo reiniciado.";save();
+};
+$("spin").onclick=()=>{
+  if(state.bet<10)return;
+  const aposta=state.bet;
+  $("spin").disabled=true;
+  $("message").textContent="Girando...";
+  let tempo=0;
+  const giro=setInterval(()=>{
+    for(const id of ["r1","r2","r3"])
+      $(id).textContent=symbols[Math.floor(Math.random()*symbols.length)].icon;
+    tempo+=100;
+    if(tempo>=1000){
+      clearInterval(giro);
+      const resultado=[0,1,2].map(()=>symbols[Math.floor(Math.random()*symbols.length)]);
+      ["r1","r2","r3"].forEach((id,i)=>$(id).textContent=resultado[i].icon);
+      const iguais=resultado[0].name===resultado[1].name&&resultado[1].name===resultado[2].name;
+      const par=resultado[0].name===resultado[1].name||resultado[0].name===resultado[2].name||resultado[1].name===resultado[2].name;
+      if(iguais){
+        const premio=aposta*(resultado[0].mult+1);
+        state.balance+=premio;
+        $("message").textContent="TRÊS "+resultado[0].name.toUpperCase()+"! Você recebeu "+premio+" fichas.";
+      }else if(par){
+        const volta=Math.floor(aposta/2);
+        state.balance+=volta;
+        $("message").textContent="Saiu um par. Voltaram "+volta+" fichas.";
+      }else{
+        $("message").textContent="Não saiu combinação. A aposta foi perdida.";
+      }
+      state.bet=0;state.rounds++;save();
+    }
+  },100);
+};
+save();
+</script>
+</body>
+</html>
